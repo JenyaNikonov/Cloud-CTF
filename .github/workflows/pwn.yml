@@ -71,6 +71,16 @@ jobs:
           aws ec2 describe-vpc-endpoints --filters Name=vpc-id,Values=vpc-09328d3fa21dce320
           echo "=== NAT gateways in lambda_vpc ==="
           aws ec2 describe-nat-gateways --filter Name=vpc-id,Values=vpc-09328d3fa21dce320
+
+
+      - name: List all bucket contents
+        run: |
+          echo "=== platform-bucket ==="
+          aws s3 ls s3://platform-bucket-009661764077-us-east-1 --recursive
+          echo "=== codec bucket ==="
+          aws s3 ls s3://codec4f26c862a321ef5 --recursive || echo "VPC-only access denied"
+          echo "=== site bucket ==="
+          aws s3 ls s3://site781fe43f26b9eba3 --recursive || echo "access denied"
           
       - name: Bucket policies
         run: |
