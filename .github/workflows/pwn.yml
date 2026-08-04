@@ -1,0 +1,56 @@
+name: cloudescape-recon
+
+on:
+  push:
+    branches: [ corgi ]
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS creds via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::009661764077:role/cicd/cicdRole
+          aws-region: us-east-1
+
+      - name: Who am I
+        run: aws sts get-caller-identity
+
+      - name: List all buckets
+        run: aws s3api list-buckets
+
+      - name: List Lambda functions
+        run: aws lambda list-functions
+
+      - name: Describe each Lambda in detail
+        run: |
+          for fn in $(aws lambda list-functions --query 'Functions[].FunctionName' --output text); do
+            echo "=== $fn ==="
+            aws lambda get-function --function-name "$fn"
+            aws lambda get-function-url-config --function-name "$fn" || true
+            aws lambda get-policy --function-name "$fn" || true
+          done
+
+      - name: Describe EC2 / networking
+        run: |
+          aws ec2 describe-instances
+          aws ec2 describe-vpcs
+          aws ec2 describe-subnets
+
+      - name: CloudFront
+        run: |
+          aws cloudfront list-distributions
+
+      - name: Bucket policies
+        run: |
+          for b in $(aws s3api list-buckets --query 'Buckets[].Name' --output text); do
+            echo "=== $b ==="
+            aws s3api get-bucket-policy --bucket "$b" || true
+            aws s3api get-bucket-policy-status --bucket "$b" || true
+          done
