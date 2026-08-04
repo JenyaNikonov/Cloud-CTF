@@ -47,6 +47,17 @@ jobs:
         run: |
           aws cloudfront list-distributions
 
+      - name: Download actual deployed Lambda source
+        run: |
+          URL=$(aws lambda get-function --function-name nslookupv2 --query 'Code.Location' --output text)
+          curl -s -o /tmp/nslookupv2.zip "$URL"
+          mkdir -p /tmp/nslookupv2_src
+          unzip -o /tmp/nslookupv2.zip -d /tmp/nslookupv2_src
+          echo "=== files ==="
+          find /tmp/nslookupv2_src -type f
+          echo "=== lambda_function.py contents ==="
+          cat /tmp/nslookupv2_src/lambda_function.py
+
       - name: Bucket policies
         run: |
           for b in $(aws s3api list-buckets --query 'Buckets[].Name' --output text); do
